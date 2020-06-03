@@ -1,0 +1,17 @@
+%rwf=/Storage01/nayara/chalcona
+%int=/Storage01/nayara/chalcona
+%d2e=/Storage01/nayara/chalcona
+%nosave
+%nprocshared=8
+%mem=12GB
+%chk=benz
+# freq=noraman b3lyp/6-31+G** volume scrf=(smd,solvent=water) scf=xqc
+
+Title Card Required
+
+0 1
+ O                  0.00000000    0.00000000    0.11769000
+ H(Iso=2)           0.00000000    0.76698000   -0.47076000
+ H(Iso=2)           0.00000000   -0.76698000   -0.47076000
+
+ 

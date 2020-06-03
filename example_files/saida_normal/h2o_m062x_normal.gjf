@@ -1,0 +1,16 @@
+%rwf=/Storage01/hugo/chalcona
+%int=/Storage01/hugo/chalcona
+%d2e=/Storage01/hugo/chalcona
+%nosave
+%nprocshared=8
+%mem=16GB
+%chk=h2o_m062x
+# opt freq=noraman X3LYP/6-31+G(d) volume scrf=(smd,solvent=water) scf=xqc 
+
+h2o_m062x
+
+O          0.000000          0.000000          0.118192          
+H          0.000000          0.760196          -0.472766          
+H          0.000000          -0.760196          -0.472766          
+
+

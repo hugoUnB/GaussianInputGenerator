@@ -1,0 +1,52 @@
+##
+##
+#PBS -S /bin/bash
+#PBS -l nodes=1:ppn=8
+#PBS -l mem=16GB
+#PBS -l walltime=1440:00:00
+#PBS -N HugoChalc
+
+cd $PBS_O_WORKDIR
+
+echo "inicio do job: "`date`
+echo "Hostname: " `hostname`
+echo "PWD: "$PWD
+
+module load softwares/gaussian-16/b01
+
+g16 H2O_normal.gjf
+sleep 3
+
+g16 OH_normal.gjf
+sleep 3
+
+g16 prod2_normal.gjf
+sleep 3
+
+g16 prod3_normal.gjf
+sleep 3
+
+g16 prod4_normal.gjf
+sleep 3
+
+g16 prod5_normal.gjf
+sleep 3
+
+g16 h_normal.gjf
+sleep 3
+
+g16 h2o_m062x_normal.gjf
+sleep 3
+
+g16 nh2_m062x_normal.gjf
+sleep 3
+
+g16 nh3oh_ts_m062x_normal.gjf
+sleep 3
+
+g16 nh3_m062x_normal.gjf
+sleep 3
+
+g16 oh_m062x_normal.gjf
+sleep 3
+
