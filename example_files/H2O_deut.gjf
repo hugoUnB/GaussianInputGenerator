@@ -4,11 +4,14 @@
 %nosave
 %nprocshared=8
 %mem=16GB
-%chk=h
+%chk=H2O_deut
 # opt freq=noraman X3LYP/6-31+G(d) volume scrf=(smd,solvent=water) scf=xqc 
 
-h
+H2O_deut
 
-H          0.000000          0.000000          0.000000          
+0 1
+ O                  0.00000000    0.00000000    0.11769000
+ H(Iso=2)           0.00000000    0.76698000   -0.47076000
+ H(Iso=2)           0.00000000   -0.76698000   -0.47076000
 
 

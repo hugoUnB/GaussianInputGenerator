@@ -3,9 +3,9 @@
 %d2e=/Storage01/hugo/chalcona
 %nosave
 %nprocshared=8
-%mem=16GB
+%mem=32GB
 %chk=H2O
-# opt freq=noraman X3LYP/6-31+G(d) volume scrf=(smd,solvent=water) scf=xqc 
+# opt freq=noraman M08HX/aug-cc-pvdz volume scrf=(smd,solvent=water) scf=xqc 
 
 H2O
 

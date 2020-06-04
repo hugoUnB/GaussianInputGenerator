@@ -1,17 +1,9 @@
 import os
 import re
-class ChalcInputGen:
-    periodic_table = {
-        "1": "H", "2": "He",
-        "3": "Li", "4": "Be", "5": "B", "6": "C", "7": "N", "8": "O", "9": "F", "10": "Ne",
-        "11": "Na", "12": "Mg", "13": "Al", "14": "Si", "15": "P", "16": "S", "17": "Cl", "18": "Ar",
-        "19": "K", "20": "Ca", "21": "Sc", "22": "Ti", "23": "V", "24": "Cr", "25": "Mn", "26": "Fe", "27": "Co",
-        "28": "Ni", "29": "Cu", "30": "Zn", "31": "Ga", "32": "Ge", "33": "As", "34": "Se", "35": "Br", "36": "Kr",
-        "37": "Rb", "38": "Sr", "39": "Y", "40": "Zr", "41": "Nb", "42": "Mo", "43": "Tc", "44": "Ru", "45": "Rh",
-        "46": "Pd", "47": "Ag", "48": "Cd", "49": "In", "50": "Sn", "51": "Sb", "52": "Te", "53": "I", "54": "Xe"
-    }
 
-    def __init__(self, path=os.getcwd()):
+class GaussianInputGen:
+
+    def __init__(self, path=os.getcwd(), type='both'):
         """
         Esta classe extrai as coordenadas moleculares de uma série de arquivos 'gjf'
         e cria inputs personalizados a partir destas informações
@@ -23,13 +15,14 @@ class ChalcInputGen:
         files_out = [file for file in os.listdir(path) if '.out' in file or '.log' in file]
 
         self.coord = {}
-        for file in files_gjf:
-            with open(os.path.join(path,file), 'r') as txt:
-                self.coord[file] = self.__extract_coord_gjf(txt.readlines())
-
-        for file in files_out:
-            with open(os.path.join(path,file), 'r') as txt:
-                self.coord[file] = self.__extract_coord_out(txt.readlines())
+        if type == 'gjf' or type == 'both':
+            for file in files_gjf:
+                with open(os.path.join(path,file), 'r') as txt:
+                    self.coord[file] = self.__extract_coord_gjf(txt.readlines())
+        if type == 'out' or type == 'log' or type == 'both':
+            for file in files_out:
+                with open(os.path.join(path,file), 'r') as txt:
+                    self.coord[file] = self.__extract_coord_out(txt.readlines())
 
     def __extract_coord_gjf(self,txt):
         """
@@ -58,24 +51,40 @@ class ChalcInputGen:
         :param txt: 'Lista' contendo as linhas do arquivo 'out' ou 'log'
         :return:  'Lista' contendo apenas as linhas referentes as coordenadas moleculares
         """
-        idx = 0
+
         for i, line in enumerate(txt):
+            result = re.search('NAtoms=', line)
+            if result != None:
+                NAtom = int(line.split()[1])
+                break
+        idxZ = 0
+        for i, line in enumerate(txt):
+            result = re.search('Symbolic Z-matrix:', line)
+            if result != None:
+                idxZ = i + 2
+                break
+        if idxZ == 0: return None
+
+        atoms = []
+        for line in txt[idxZ : idxZ+NAtom]:
+            atoms.append(line.split()[0])
+
+        idxS = 0
+        for i, line in enumerate(txt[idxZ + NAtom:]):
             result = re.search('Standard orientation', line)
             if result != None:
-                idx = i + 5
-        if idx == 0: return None
+                idxS = i + 5 + idxZ + NAtom
+        if idxS == 0: return None
 
         coord = []
-        for line in txt[idx:]:
-            if re.search('----------------------------', line) != None:
-                break
-            ln = line.split()
-            del ln[0]
-            del ln[1]
-            ln[0] = self.periodic_table[ln[0]]
-            ln.append('\n')
-            ln = '          '.join(ln)
-            coord.append(ln)
+        for i,line in enumerate(txt[idxS : idxS + NAtom]):
+            coord.append(' {:<18}  {}\n'.format(atoms[i], '\t'.join(line.split()[3:])))
+
+        charge = txt[idxZ-1].split()[2]
+        multiplicity = txt[idxZ-1].split()[5]
+
+        coord.insert(0, '{} {}\n'.format(charge,multiplicity))
+
         return coord
 
     def __gjf_head(self,name,storage,proc,mem,calc_line):
@@ -177,7 +186,7 @@ class ChalcInputGen:
         return filename
 
     def write_pbs(self,
-                  name = 'HugoChalc',
+                  name = 'Chalc',
                   nodes = 8,
                   mem = 16,
                   walltime = 1440,
@@ -190,7 +199,7 @@ class ChalcInputGen:
         :param walltime: 'String' ou 'Float' número de horas de cálculo para entrar na fila
         :param g0: 'Float' versão do gaussian para carregamento do módulo correto (suporta apenas 9 e 16)
         """
-        with open(os.path.join(self.pathout,'fila.pbs'),'w') as w:
+        with open(os.path.join(self.pathout,'fila_{}.pbs'.format(name)),'w') as w:
             w.writelines(self.__pbs_head(name,nodes,mem,walltime,g0))
 
             for file in self.coord:
@@ -200,13 +209,16 @@ class ChalcInputGen:
                 w.write('sleep 3\n\n')
 
 
+
+
 if __name__ == '__main__':
-
-    a = ChalcInputGen('example_files')
-    a.write_gjf(path='saida_normal', deut=False, name_add='normal')
-    a.write_pbs()
-
-    b = ChalcInputGen('example_files')
-    b.write_gjf(path='saida_deut', deut=True, name_add='deut', storage='hugo/chalcona_deut')
-    b.write_pbs('HugoChalc_deut')
+    a = GaussianInputGen('test')
+    a.write_gjf(deut=True,
+                storage='hugo/chalcona',
+                proc=8,
+                mem = 32,
+                calc_line = 'opt freq=noraman M08HX/aug-cc-pvdz volume scrf=(smd,solvent=water) scf=xqc')
+    a.write_pbs('Chalcona',
+                nodes=8,
+                mem=32)
 
